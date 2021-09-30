@@ -67,7 +67,9 @@ func TestClientServer(t *testing.T) {
 	if err := ch.Close(); err != nil {
 		t.Errorf("Client Close: unexpected error: %v", err)
 	}
-	lst.Close()
+	if err := lst.Close(); err != nil {
+		t.Errorf("Listener close: unexpected error: %v", err)
+	}
 }
 
 func TestListenerErrors(t *testing.T) {
@@ -84,6 +86,30 @@ func TestListenerErrors(t *testing.T) {
 			t.Errorf("Get failed: %v", err)
 		} else if rsp.StatusCode != http.StatusTeapot {
 			t.Errorf("Response status: got %v, want %v", rsp.StatusCode, http.StatusTeapot)
+		}
+	})
+
+	t.Run("QueueFull", func(t *testing.T) {
+		lst := wschannel.NewListener(nil)
+		defer lst.Close()
+
+		s := httptest.NewServer(lst)
+		defer s.Close()
+
+		// The first connection should succeed, since there is a queue slot.
+		c1, err := wschannel.Dial(fixURL(s.URL), nil)
+		if err != nil {
+			t.Fatalf("Client 1 failed: %v", err)
+		}
+		defer c1.Close()
+
+		// The second connection should fail, since the queue is full.
+		c2, err := wschannel.Dial(fixURL(s.URL), nil)
+		if err != nil {
+			t.Logf("Client 2 dial: got expected error: %v", err)
+		} else {
+			t.Errorf("Client 2 dial: got %+v, want error", c2)
+			c2.Close()
 		}
 	})
 }

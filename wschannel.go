@@ -2,7 +2,10 @@
 package wschannel
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -61,8 +64,13 @@ func New(conn *websocket.Conn) *Channel { return &Channel{c: conn} }
 // Dial dials the specified websocket URL ("ws://....") with the given options
 // and negotiates a client channel with the server.
 func Dial(url string, opts *ClientOptions) (*Channel, error) {
-	conn, _, err := opts.dialer().Dial(url, opts.header())
+	conn, rsp, err := opts.dialer().Dial(url, opts.header())
 	if err != nil {
+		if err != websocket.ErrBadHandshake {
+			return nil, fmt.Errorf("dial: %w", err)
+		} else if msg, err := io.ReadAll(rsp.Body); err == nil && len(msg) != 0 {
+			return nil, fmt.Errorf("dial: %s", strings.TrimSpace(string(msg)))
+		}
 		return nil, err
 	}
 	return &Channel{c: conn}, nil

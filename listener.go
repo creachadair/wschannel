@@ -21,7 +21,7 @@ func NewListener(opts *ListenOptions) *Listener {
 		u:     opts.upgrader(),
 		hdr:   opts.header(),
 		check: opts.check(),
-		inc:   make(chan *Channel, 1),
+		inc:   make(chan *Channel, opts.maxPending()),
 	}
 }
 
@@ -36,8 +36,6 @@ type Listener struct {
 	u     websocket.Upgrader
 	hdr   http.Header
 	check func(*http.Request) (int, error)
-
-	wg sync.WaitGroup
 
 	mu     sync.Mutex
 	inc    chan *Channel
@@ -58,38 +56,29 @@ func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	conn, err := lst.u.Upgrade(w, req, lst.hdr)
-	if err != nil {
-		return // Upgrade already sent an error response
-	}
-	done, err := lst.add(conn)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	<-done // block until the channel closes
-}
-
-type completer <-chan struct{}
-
-// add queues a new channel on conn for the Accept method. If lst is closed, it
-// returns ErrListenerClosed; otherwise it returns a channel that will close
-// when conn is no longer in use.
-func (lst *Listener) add(conn *websocket.Conn) (completer, error) {
 	lst.mu.Lock()
-	defer lst.mu.Unlock()
-	if lst.closed {
-		return nil, ErrListenerClosed
-	}
+	done := func() <-chan struct{} {
+		defer lst.mu.Unlock()
+		if lst.closed {
+			http.Error(w, "listener is closed", http.StatusInternalServerError)
+			return nil
+		} else if len(lst.inc) == cap(lst.inc) {
+			http.Error(w, "connection queue is full", http.StatusInternalServerError)
+			return nil
+		}
 
-	lst.wg.Add(1)
-	done := make(chan struct{})
-	go func() {
-		defer lst.wg.Done()
+		conn, err := lst.u.Upgrade(w, req, lst.hdr)
+		if err != nil {
+			return nil // Upgrade already sent an error response
+		}
+
+		done := make(chan struct{})
 		lst.inc <- &Channel{c: conn, done: done}
-		<-done
+		return done
 	}()
-	return done, nil
+	if done != nil {
+		<-done // block until the Channel has closed
+	}
 }
 
 // Accept blocks until a channel is available or ctx ends. Accept returns
@@ -109,27 +98,33 @@ func (lst *Listener) Accept(ctx context.Context) (*Channel, error) {
 
 // Close closes the listener, after which no further connections will be
 // admitted, and any connections admitted but not yet accepted will be closed
-// and discarded. Close then blocks until all remianing accepted connections
-// have closed.
+// and discarded.
 func (lst *Listener) Close() error {
 	lst.mu.Lock()
 	defer lst.mu.Unlock()
-	defer lst.wg.Wait() // wait outside the lock
 
 	if lst.closed {
 		return ErrListenerClosed
 	}
 	close(lst.inc)
+	var cerr error
 	for ch := range lst.inc {
-		ch.Close()
+		if err := ch.Close(); cerr == nil {
+			cerr = err
+		}
 	}
 	lst.closed = true
-	return nil
+	return cerr
 }
 
 // ListenOptions are settings for a listener. A nil *ListenOptions is ready for
 // use and provides default values as described.
 type ListenOptions struct {
+	// The maximum number of unaccepted (pending) connections that will be
+	// admitted by the listener. Connections in excess of this will be rejected.
+	// If MaxPending ≤ 0, the default limit is 1.
+	MaxPending int
+
 	// If set, this function is called on each HTTP request recieved by the
 	// listener, before attempting to upgrade.
 	//
@@ -146,6 +141,13 @@ type ListenOptions struct {
 
 	// If set, use this connection upgrader. If omitted, default settings are used.
 	Upgrader websocket.Upgrader
+}
+
+func (o *ListenOptions) maxPending() int {
+	if o == nil || o.MaxPending <= 0 {
+		return 1
+	}
+	return o.MaxPending
 }
 
 func (o *ListenOptions) check() func(*http.Request) (int, error) {
