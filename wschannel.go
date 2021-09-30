@@ -11,8 +11,12 @@ var closeMessage = websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""
 
 // Channel implements the jrpc2 Channel interface over a websocket.
 //
-// On the server side, use wschannel.New to wrap the websocket connection.
-// On the client side, use wschannel.Dial to dial a server.
+// On the client side, use the Dial function to connect to a websocket endpoint
+// and negotiate a connection.
+//
+// On the server side, you can either use NewListener to create a listener that
+// plugs in to the http.Handler interface automatically, or handle the upgrade
+// negotation explicitly and call New to construct a Channel.
 type Channel struct {
 	c    *websocket.Conn
 	done chan struct{} // if not nil, closed by Close
