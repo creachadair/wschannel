@@ -25,10 +25,10 @@ func NewListener(opts *ListenOptions) *Listener {
 	}
 }
 
-// A Listener implements the http.Handler interface to bridge websocket to
-// channels. Each connection served to the listener is made available to the
-// Accept method, and its corresponding handler remains open until the channel
-// is closed.
+// A Listener implements the http.Handler interface to bridge websocket
+// requests to channels. Each connection served to the listener is made
+// available to the Accept method, and its corresponding handler remains open
+// until the channel is closed.
 //
 // After the listener is closed, no further connections will be admitted and
 // any unaccepted pending connections are discarded.
