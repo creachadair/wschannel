@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// ErrListenerClosed is the error reported for a closed listener.
 var ErrListenerClosed = errors.New("listener is closed")
 
 // NewListener constructs a new listener with the given options.
@@ -17,9 +18,10 @@ var ErrListenerClosed = errors.New("listener is closed")
 // Accept method to obtain connected channels served by the handler.
 func NewListener(opts *ListenOptions) *Listener {
 	return &Listener{
-		u:   opts.upgrader(),
-		hdr: opts.header(),
-		inc: make(chan *Channel, 1),
+		u:     opts.upgrader(),
+		hdr:   opts.header(),
+		check: opts.check(),
+		inc:   make(chan *Channel, 1),
 	}
 }
 
@@ -31,8 +33,9 @@ func NewListener(opts *ListenOptions) *Listener {
 // After the listener is closed, no further connections will be admitted and
 // any unaccepted pending connections are discarded.
 type Listener struct {
-	u   websocket.Upgrader
-	hdr http.Header
+	u     websocket.Upgrader
+	hdr   http.Header
+	check func(*http.Request) (int, error)
 
 	wg sync.WaitGroup
 
@@ -46,9 +49,18 @@ type Listener struct {
 // the upgraded connection. Each invocation of the handler blocks until the
 // corresponding channel closes.
 func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	// Call the check hook.
+	if code, err := lst.check(req); err != nil {
+		if code <= 0 {
+			code = http.StatusInternalServerError
+		}
+		http.Error(w, err.Error(), code)
+		return
+	}
+
 	conn, err := lst.u.Upgrade(w, req, lst.hdr)
 	if err != nil {
-		return // Upgrade already sent a response
+		return // Upgrade already sent an error response
 	}
 	done, err := lst.add(conn)
 	if err != nil {
@@ -118,11 +130,28 @@ func (lst *Listener) Close() error {
 // ListenOptions are settings for a listener. A nil *ListenOptions is ready for
 // use and provides default values as described.
 type ListenOptions struct {
+	// If set, this function is called on each HTTP request recieved by the
+	// listener, before attempting to upgrade.
+	//
+	// If CheckAccept reports an error, no upgrade is attempted, and the error
+	// is returned to the caller.  The int value is used as the HTTP status code
+	// if an error is reported; otherwise it is ignored.
+	//
+	// If CheckAccept is not set, all requests are upgraded.
+	CheckAccept func(req *http.Request) (int, error)
+
 	// If set, include these HTTP headers when negotiating a connection upgrade.
 	Header http.Header
 
 	// If set, use this connection upgrader. If omitted, default settings are used.
 	Upgrader websocket.Upgrader
+}
+
+func (o *ListenOptions) check() func(*http.Request) (int, error) {
+	if o == nil || o.CheckAccept == nil {
+		return func(*http.Request) (int, error) { return 0, nil }
+	}
+	return o.CheckAccept
 }
 
 func (o *ListenOptions) header() http.Header {

@@ -2,6 +2,8 @@ package wschannel_test
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -66,4 +68,22 @@ func TestClientServer(t *testing.T) {
 		t.Errorf("Client Close: unexpected error: %v", err)
 	}
 	lst.Close()
+}
+
+func TestListenerErrors(t *testing.T) {
+	t.Run("CheckReject", func(t *testing.T) {
+		s := httptest.NewServer(wschannel.NewListener(&wschannel.ListenOptions{
+			CheckAccept: func(*http.Request) (int, error) {
+				return http.StatusTeapot, errors.New("failed")
+			},
+		}))
+		defer s.Close()
+
+		rsp, err := http.Get(s.URL)
+		if err != nil {
+			t.Errorf("Get failed: %v", err)
+		} else if rsp.StatusCode != http.StatusTeapot {
+			t.Errorf("Response status: got %v, want %v", rsp.StatusCode, http.StatusTeapot)
+		}
+	})
 }
