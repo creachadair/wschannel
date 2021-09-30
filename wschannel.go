@@ -14,7 +14,8 @@ var closeMessage = websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""
 // On the server side, use wschannel.New to wrap the websocket connection.
 // On the client side, use wschannel.Dial to dial a server.
 type Channel struct {
-	c *websocket.Conn
+	c    *websocket.Conn
+	done chan struct{} // if not nil, closed by Close
 }
 
 // Send implements the corresponding method of the Channel interface.
@@ -43,6 +44,9 @@ func (c *Channel) Close() error {
 	cerr := c.c.Close()
 	if err != nil {
 		return err
+	}
+	if c.done != nil {
+		close(c.done)
 	}
 	return cerr
 }

@@ -1,68 +1,50 @@
 package wschannel_test
 
 import (
-	"net/http"
+	"context"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/creachadair/jrpc2/channel"
 	"github.com/creachadair/wschannel"
-	"github.com/gorilla/websocket"
 )
 
-var (
-	_ channel.Channel = (*wschannel.Channel)(nil)
-
-	upgrader websocket.Upgrader
-)
+var _ channel.Channel = (*wschannel.Channel)(nil)
 
 func fixURL(url string) string {
 	return "ws:" + strings.TrimPrefix(url, "http:")
-}
-
-type serveChannel struct {
-	t   *testing.T
-	run func(*wschannel.Channel) error
-}
-
-func (s *serveChannel) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.t.Helper()
-	conn, err := upgrader.Upgrade(w, req, nil)
-	if err != nil {
-		s.t.Errorf("Upgrading connection: %v", err)
-	}
-	ch := wschannel.New(conn)
-	if err := s.run(ch); err != nil {
-		s.t.Errorf("Run failed: %v", err)
-	}
-	if err := ch.Close(); err != nil {
-		s.t.Errorf("Channel close: unexpected error: %v", err)
-	}
 }
 
 func TestClientServer(t *testing.T) {
 	const testMessage = "hello, is there anybody in there"
 	const testReply = "ok"
 
-	// Server: Read one message from the client, and sends back testReply.
-	s := httptest.NewServer(&serveChannel{
-		t: t,
-		run: func(ch *wschannel.Channel) error {
-			bits, err := ch.Recv()
-			if err != nil {
-				t.Errorf("Server Recv failed: %v", err)
-			}
-			if got := string(bits); got != testMessage {
-				t.Errorf("Server message: got %q, want %q", got, testMessage)
-			}
-			if err := ch.Send([]byte(testReply)); err != nil {
-				t.Errorf("Server Send failed: %v", err)
-			}
-			return nil
-		},
-	})
+	// Set up a listener to receive connections from the HTTP server.
+	lst := wschannel.NewListener(nil)
+	s := httptest.NewServer(lst)
 	defer s.Close()
+
+	// Server: Accept, and exchange a pair of messages with the client.
+	go func() {
+		ch, err := lst.Accept(context.Background())
+		if err != nil {
+			t.Errorf("Accept failed: %v", err)
+			return
+		}
+		defer ch.Close()
+
+		bits, err := ch.Recv()
+		if err != nil {
+			t.Errorf("Server Recv failed: %v", err)
+		}
+		if got := string(bits); got != testMessage {
+			t.Errorf("Server message: got %q, want %q", got, testMessage)
+		}
+		if err := ch.Send([]byte(testReply)); err != nil {
+			t.Errorf("Server Send failed: %v", err)
+		}
+	}()
 
 	// Client: Send testMessage to the server, and read back its reply.
 	ch, err := wschannel.Dial(fixURL(s.URL), nil)
@@ -83,4 +65,5 @@ func TestClientServer(t *testing.T) {
 	if err := ch.Close(); err != nil {
 		t.Errorf("Client Close: unexpected error: %v", err)
 	}
+	lst.Close()
 }
