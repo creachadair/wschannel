@@ -67,7 +67,7 @@ func New(conn *websocket.Conn) *Channel { return &Channel{c: conn} }
 
 // Dial dials the specified websocket URL ("ws://....") with the given options
 // and negotiates a client channel with the server.
-func Dial(url string, opts *ClientOptions) (*Channel, error) {
+func Dial(url string, opts *DialOptions) (*Channel, error) {
 	conn, rsp, err := opts.dialer().Dial(url, opts.header())
 	if err != nil {
 		if err != websocket.ErrBadHandshake {
@@ -80,9 +80,9 @@ func Dial(url string, opts *ClientOptions) (*Channel, error) {
 	return &Channel{c: conn}, nil
 }
 
-// ClientOptions are settings for a client channel. A nil *ClientOptions is
+// DialOptions are settings for a client channel. A nil *DialOptions is
 // ready for use and provides default values as described.
-type ClientOptions struct {
+type DialOptions struct {
 	// If set, send these HTTP headers during the websocket handshake.
 	Header http.Header
 
@@ -91,14 +91,14 @@ type ClientOptions struct {
 	Dialer *websocket.Dialer
 }
 
-func (o *ClientOptions) header() http.Header {
+func (o *DialOptions) header() http.Header {
 	if o == nil {
 		return nil
 	}
 	return o.Header
 }
 
-func (o *ClientOptions) dialer() *websocket.Dialer {
+func (o *DialOptions) dialer() *websocket.Dialer {
 	if o == nil || o.Dialer == nil {
 		return websocket.DefaultDialer
 	}
