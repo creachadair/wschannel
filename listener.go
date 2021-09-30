@@ -134,8 +134,9 @@ type ListenOptions struct {
 	// listener, before attempting to upgrade.
 	//
 	// If CheckAccept reports an error, no upgrade is attempted, and the error
-	// is returned to the caller.  The int value is used as the HTTP status code
-	// if an error is reported; otherwise it is ignored.
+	// is returned to the caller.  If an error is being reported, the int value
+	// is used as the HTTP status code if it is greater than 0; otherwise the
+	// handler reports code 500 (server internal error).
 	//
 	// If CheckAccept is not set, all requests are upgraded.
 	CheckAccept func(req *http.Request) (int, error)
