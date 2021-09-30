@@ -63,7 +63,7 @@ func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "listener is closed", http.StatusInternalServerError)
 			return nil
 		} else if len(lst.inc) == cap(lst.inc) {
-			http.Error(w, "connection queue is full", http.StatusInternalServerError)
+			http.Error(w, "connection queue is full", http.StatusServiceUnavailable)
 			return nil
 		}
 
