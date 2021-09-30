@@ -8,6 +8,7 @@ package wschannel
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 
@@ -32,7 +33,7 @@ type Channel struct {
 // Send implements the corresponding method of the Channel interface.
 // The data are transmitted as a single binary websocket message.
 func (c *Channel) Send(data []byte) error {
-	return c.c.WriteMessage(websocket.BinaryMessage, data)
+	return filterErr(c.c.WriteMessage(websocket.BinaryMessage, data))
 }
 
 // Recv implements the corresponding method of the Channel interface.
@@ -41,9 +42,9 @@ func (c *Channel) Send(data []byte) error {
 func (c *Channel) Recv() ([]byte, error) {
 	_, bits, err := c.c.ReadMessage()
 	if err != nil {
-		return nil, err
+		return nil, filterErr(err)
 	}
-	return bits, err
+	return bits, nil
 }
 
 // Close sends a close message to the peer, then shuts down the underlying
@@ -60,6 +61,13 @@ func (c *Channel) Close() error {
 		close(c.done)
 	}
 	return cerr
+}
+
+func filterErr(err error) error {
+	if _, ok := err.(*websocket.CloseError); ok {
+		return net.ErrClosed
+	}
+	return err
 }
 
 // New wraps the given websocket connection to implement the Channel interface.
