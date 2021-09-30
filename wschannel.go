@@ -1,4 +1,8 @@
 // Package wschannel implements the jrpc2 Channel interface over a websocket.
+//
+// For jrpc2, see https://godoc.org/github.com/creachadair/jrpc2.
+// For websockets see https://datatracker.ietf.org/doc/html/rfc6455.
+// This package uses the github.com/gorilla/websocket library.
 package wschannel
 
 import (
