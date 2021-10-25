@@ -1,5 +1,5 @@
-github.com/creachadair/jrpc2 v0.26.0 h1:osFFznmP4tyQ1Dg4DQhM0EJ+wHjCvXr9RjvYwFsxRMw=
-github.com/creachadair/jrpc2 v0.26.0/go.mod h1:w+GXZGc+NwsH0xsUOgeLBIIRM0jBOSTXhv28KaWGRZU=
+github.com/creachadair/jrpc2 v0.28.5 h1:kN3UQBM7IZDEJc0CIfqLId1LHsPxx9gRs1G7COn839o=
+github.com/creachadair/jrpc2 v0.28.5/go.mod h1:w+GXZGc+NwsH0xsUOgeLBIIRM0jBOSTXhv28KaWGRZU=
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
