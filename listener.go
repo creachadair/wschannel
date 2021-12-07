@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/creachadair/jrpc2/channel"
 	"github.com/gorilla/websocket"
 )
 
@@ -83,8 +84,9 @@ func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // Accept blocks until a channel is available or ctx ends. Accept returns
 // ErrListenerClosed if the listener has closed.  The caller must ensure the
-// returned channel is closed.
-func (lst *Listener) Accept(ctx context.Context) (*Channel, error) {
+// returned channel is closed. The concrete type of the channel returned is
+// *wschannel.Channel.
+func (lst *Listener) Accept(ctx context.Context) (channel.Channel, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

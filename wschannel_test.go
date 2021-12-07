@@ -35,6 +35,9 @@ func TestClientServer(t *testing.T) {
 			return
 		}
 		defer ch.Close()
+		if _, ok := ch.(*wschannel.Channel); !ok {
+			t.Errorf("Accepted channel is %T, not *Channel", ch)
+		}
 
 		bits, err := ch.Recv()
 		if err != nil {
