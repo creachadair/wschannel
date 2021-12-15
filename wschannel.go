@@ -57,11 +57,12 @@ func (c *Channel) Close() error {
 	if err != nil {
 		return err
 	}
-	if c.done != nil {
-		close(c.done)
-	}
+	close(c.done)
 	return cerr
 }
+
+// Done returns a channel that is closed when c is closed.
+func (c *Channel) Done() <-chan struct{} { return c.done }
 
 func filterErr(err error) error {
 	if _, ok := err.(*websocket.CloseError); ok {
@@ -71,7 +72,9 @@ func filterErr(err error) error {
 }
 
 // New wraps the given websocket connection to implement the Channel interface.
-func New(conn *websocket.Conn) *Channel { return &Channel{c: conn} }
+func New(conn *websocket.Conn) *Channel {
+	return &Channel{c: conn, done: make(chan struct{})}
+}
 
 // Dial dials the specified websocket URL ("ws://....") with the given options
 // and negotiates a client channel with the server.
@@ -85,7 +88,7 @@ func Dial(url string, opts *DialOptions) (*Channel, error) {
 		}
 		return nil, err
 	}
-	return &Channel{c: conn}, nil
+	return New(conn), nil
 }
 
 // DialOptions are settings for a client channel. A nil *DialOptions is

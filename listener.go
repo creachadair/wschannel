@@ -73,9 +73,9 @@ func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return nil // Upgrade already sent an error response
 		}
 
-		done := make(chan struct{})
-		lst.inc <- &Channel{c: conn, done: done}
-		return done
+		ch := New(conn)
+		lst.inc <- ch
+		return ch.done
 	}()
 	if done != nil {
 		<-done // block until the Channel has closed

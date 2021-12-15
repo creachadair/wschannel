@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/creachadair/jrpc2/channel"
 	"github.com/creachadair/wschannel"
@@ -56,6 +57,7 @@ func TestClientServer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewClient: unexpected error: %v", err)
 	}
+	done := ch.Done()
 
 	if err := ch.Send([]byte(testMessage)); err != nil {
 		t.Errorf("Client Send %q: %v", testMessage, err)
@@ -72,6 +74,13 @@ func TestClientServer(t *testing.T) {
 	}
 	if err := lst.Close(); err != nil {
 		t.Errorf("Listener close: unexpected error: %v", err)
+	}
+
+	select {
+	case <-done:
+		t.Log("Channel closed signal received (OK)")
+	case <-time.After(1 * time.Second):
+		t.Error("Timed out waiting for close signal")
 	}
 }
 
