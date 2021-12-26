@@ -127,7 +127,7 @@ type ListenOptions struct {
 	// If MaxPending ≤ 0, the default limit is 1.
 	MaxPending int
 
-	// If set, this function is called on each HTTP request recieved by the
+	// If set, this function is called on each HTTP request received by the
 	// listener, before attempting to upgrade.
 	//
 	// If CheckAccept reports an error, no upgrade is attempted, and the error
