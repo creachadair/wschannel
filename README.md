@@ -1,7 +1,6 @@
 # wschannel
 
 [![GoDoc](https://img.shields.io/static/v1?label=godoc&message=reference&color=blue)](https://pkg.go.dev/github.com/creachadair/wschannel)
-[![Go Report Card](https://goreportcard.com/badge/github.com/creachadair/wschannel)](https://goreportcard.com/report/github.com/creachadair/wschannel)
 
 Package `wschannel` provides an implementation of the
 [`jrpc2`](https://godoc.org/github.com/creachadair/jrpc2) module's
