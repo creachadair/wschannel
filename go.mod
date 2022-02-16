@@ -4,5 +4,5 @@ go 1.17
 
 require (
 	github.com/creachadair/jrpc2 v0.35.5
-	github.com/gorilla/websocket v1.4.2
+	github.com/gorilla/websocket v1.5.0
 )
