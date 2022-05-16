@@ -1,5 +1,5 @@
-github.com/creachadair/jrpc2 v0.40.0 h1:OFAu2rhGMSdS6BaEIO7BYS8cZ4REb3mOrFLqP6JXGJA=
-github.com/creachadair/jrpc2 v0.40.0/go.mod h1:SwEPHK3zqbc5j6AVBVdGoc2QYwYDQUBGnQYk0tflx9k=
+github.com/creachadair/jrpc2 v0.41.0 h1:5ymgzbDfb8YeGT72h4223AWL9u1nAHJkz5K42uD7MBo=
+github.com/creachadair/jrpc2 v0.41.0/go.mod h1:SwEPHK3zqbc5j6AVBVdGoc2QYwYDQUBGnQYk0tflx9k=
 github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=
 github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
