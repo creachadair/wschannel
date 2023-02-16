@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/creachadair/jrpc2/channel"
-	"github.com/gorilla/websocket"
+	"nhooyr.io/websocket"
 )
 
 // ErrListenerClosed is the error reported for a closed listener.
@@ -19,7 +19,6 @@ var ErrListenerClosed = errors.New("listener is closed")
 // Accept method to obtain connected channels served by the handler.
 func NewListener(opts *ListenOptions) *Listener {
 	return &Listener{
-		u:     opts.upgrader(),
 		hdr:   opts.header(),
 		check: opts.check(),
 		inc:   make(chan *Channel, opts.maxPending()),
@@ -34,7 +33,6 @@ func NewListener(opts *ListenOptions) *Listener {
 // After the listener is closed, no further connections will be admitted and
 // any unaccepted pending connections are discarded.
 type Listener struct {
-	u     websocket.Upgrader
 	hdr   http.Header
 	check func(*http.Request) (int, error)
 
@@ -68,14 +66,16 @@ func (lst *Listener) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return nil
 		}
 
-		conn, err := lst.u.Upgrade(w, req, lst.hdr)
+		// TODO(creachadair): Add support for AcceptOptions.
+		conn, err := websocket.Accept(w, req, nil)
 		if err != nil {
 			return nil // Upgrade already sent an error response
 		}
 
 		ch := New(conn)
+		done := ch.done
 		lst.inc <- ch
-		return ch.done
+		return done
 	}()
 	if done != nil {
 		<-done // block until the Channel has closed
@@ -140,9 +140,6 @@ type ListenOptions struct {
 
 	// If set, include these HTTP headers when negotiating a connection upgrade.
 	Header http.Header
-
-	// If set, use this connection upgrader. If omitted, default settings are used.
-	Upgrader websocket.Upgrader
 }
 
 func (o *ListenOptions) maxPending() int {
@@ -164,11 +161,4 @@ func (o *ListenOptions) header() http.Header {
 		return nil
 	}
 	return o.Header
-}
-
-func (o *ListenOptions) upgrader() websocket.Upgrader {
-	if o == nil {
-		return websocket.Upgrader{}
-	}
-	return o.Upgrader
 }
