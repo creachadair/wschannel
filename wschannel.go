@@ -2,7 +2,7 @@
 //
 // For jrpc2, see https://godoc.org/github.com/creachadair/jrpc2.
 // For websockets see https://datatracker.ietf.org/doc/html/rfc6455.
-// This package uses the github.com/gorilla/websocket library.
+// This package uses the nhooyr.io/websocket library.
 package wschannel
 
 import (
