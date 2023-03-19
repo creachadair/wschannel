@@ -3,7 +3,7 @@ module github.com/creachadair/wschannel
 go 1.19
 
 require (
-	github.com/creachadair/jrpc2 v0.45.0
+	github.com/creachadair/jrpc2 v0.46.0
 	nhooyr.io/websocket v1.8.7
 )
 
