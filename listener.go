@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/coder/websocket"
 	"github.com/creachadair/jrpc2/channel"
-	"nhooyr.io/websocket"
 )
 
 // ErrListenerClosed is the error reported for a closed listener.

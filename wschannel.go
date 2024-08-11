@@ -11,7 +11,7 @@ import (
 	"net"
 	"net/http"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 // Channel implements the jrpc2 Channel interface over a websocket.
