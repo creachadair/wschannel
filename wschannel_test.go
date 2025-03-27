@@ -3,6 +3,7 @@ package wschannel_test
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -71,6 +72,9 @@ func TestClientServer(t *testing.T) {
 
 	if err := ch.Close(); err != nil {
 		t.Errorf("Client Close: unexpected error: %v", err)
+	}
+	if pkt, err := ch.Recv(); !errors.Is(err, net.ErrClosed) {
+		t.Errorf("Channel receive: got %q, %v; want %v", pkt, err, net.ErrClosed)
 	}
 	if err := lst.Close(); err != nil {
 		t.Errorf("Listener close: unexpected error: %v", err)
