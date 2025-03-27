@@ -59,7 +59,7 @@ func (c *Channel) Close() error {
 func (c *Channel) Done() <-chan struct{} { return c.done }
 
 func filterErr(err error) error {
-	if errors.Is(err, (*websocket.CloseError)(nil)) {
+	if errors.As(err, &websocket.CloseError{}) {
 		return net.ErrClosed
 	}
 	return err
