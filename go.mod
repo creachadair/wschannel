@@ -1,8 +1,10 @@
 module github.com/creachadair/wschannel
 
-go 1.23
+go 1.24
+
+toolchain go1.24.5
 
 require (
 	github.com/coder/websocket v1.8.13
-	github.com/creachadair/jrpc2 v1.3.1
+	github.com/creachadair/jrpc2 v1.3.2
 )
