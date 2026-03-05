@@ -1,4 +1,4 @@
 github.com/coder/websocket v1.8.14 h1:9L0p0iKiNOibykf283eHkKUHHrpG7f65OE3BhhO7v9g=
 github.com/coder/websocket v1.8.14/go.mod h1:NX3SzP+inril6yawo5CQXx8+fk145lPDC6pumgx0mVg=
-github.com/creachadair/jrpc2 v1.3.4 h1:3bDFDlRORVAVuzBSpi4b81seIYZPSgdfZQQgGbGCbAA=
-github.com/creachadair/jrpc2 v1.3.4/go.mod h1:Rp2wYJ0fmAt66JlyLe+1zdM/a2DN5XmqffqDxANan+I=
+github.com/creachadair/jrpc2 v1.3.5 h1:onJko+1u6xoiRph3xwWmfNISR91teCRhbJwSyS9Svzo=
+github.com/creachadair/jrpc2 v1.3.5/go.mod h1:YXDmS53AavsiytbAwskrczJPcVHvKC9GoyWzwfSQXoE=
